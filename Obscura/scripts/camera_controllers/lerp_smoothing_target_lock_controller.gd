@@ -2,12 +2,10 @@ class_name LerpSmoothingTargetLockCamera
 extends CameraControllerBase
 
 @export var follow_speed: float = 7.5
-@export var catchup_speed: float = 2.0
+@export var catchup_speed: float = 1.0
 @export var leash_distance: float = 10.0
 @export var catchup_delay_duration: float = 2.0
 var time_since_stopped: float = 0.0
-var timer_running: bool = false
-var waiting: bool = false
 
 func _ready() -> void:
 	super()
@@ -24,28 +22,33 @@ func _process(_delta: float) -> void:
 		Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
 	).normalized()
 	var direction_3d = Vector3(input_direction.x, 0.0, input_direction.y)
-	var target_position = target.global_position + Vector3(0.0, dist_above_target, 0.0)
-	var distance_to_target = global_position.distance_to(target_position)
+	var t_pos = target.global_position + Vector3(0.0, dist_above_target, 0.0)
+	var distance_to_target = global_position.distance_to(t_pos)
 
+	var c_pos = global_position  
+	var effective_speed = follow_speed
 	if target.velocity == Vector3(0, 0, 0):
 		time_since_stopped += _delta
 		if time_since_stopped >= catchup_delay_duration:
-			global_position = global_position.lerp(target_position, catchup_speed * _delta)
-			if global_position.distance_to(target_position) < 0.5:
-				time_since_stopped = 0.0
-	elif target.is_hyper_speed:
-		global_position = global_position.lerp(
-			target_position + (direction_3d * leash_distance),
-			(target.HYPER_SPEED / 5) * _delta
-		)
-	else:
-		if distance_to_target <= leash_distance:
-			global_position = global_position.lerp(
-				target_position + (direction_3d * leash_distance),
-				follow_speed * _delta
-			)
+			c_pos = t_pos
+			effective_speed = catchup_speed
 		else:
-			global_position = global_position.lerp(target_position, follow_speed * 2 * _delta)
+			c_pos = global_position
+			effective_speed = 0
+	else:
+		time_since_stopped = 0.0
+		if distance_to_target > leash_distance:
+			c_pos = t_pos
+			effective_speed = follow_speed * 2
+		else:
+			c_pos = t_pos + (direction_3d * leash_distance)
+			effective_speed = follow_speed
+
+	if target.is_hyper_speed:
+		effective_speed = (target.HYPER_SPEED / 5)
+
+	global_position = global_position.lerp(c_pos, effective_speed * _delta)
+
 			
 		
 	if draw_camera_logic:
