@@ -27,6 +27,7 @@ func _process(_delta: float) -> void:
 		effective_speed = catchup_speed
 	elif distance_to_target > leash_distance:
 		effective_speed = follow_speed * 2
+		
 	global_position = global_position.lerp(t_pos, effective_speed * _delta)
 	
 	if draw_camera_logic:

@@ -24,6 +24,7 @@ func _process(delta: float) -> void:
 	var frame_right_edge = global_position.x + bottom_right.x
 	var frame_top_edge = global_position.z + top_left.y
 	var frame_bottom_edge = global_position.z + bottom_right.y
+	
 	if player_pos.x < frame_left_edge:
 			target.global_position.x = frame_left_edge
 	else:

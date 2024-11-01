@@ -5,7 +5,9 @@ extends CameraControllerBase
 @export var catchup_speed: float = 2.0
 @export var leash_distance: float = 10.0
 @export var catchup_delay_duration: float = 2.0
-
+var time_since_stopped: float = 0.0
+var timer_running: bool = false
+var waiting: bool = false
 
 func _ready() -> void:
 	super()
@@ -26,7 +28,11 @@ func _process(_delta: float) -> void:
 	var distance_to_target = global_position.distance_to(target_position)
 
 	if target.velocity == Vector3(0, 0, 0):
-		global_position = global_position.lerp(target_position, catchup_speed * _delta)
+		time_since_stopped += _delta
+		if time_since_stopped >= catchup_delay_duration:
+			global_position = global_position.lerp(target_position, catchup_speed * _delta)
+			if global_position.distance_to(target_position) < 0.5:
+				time_since_stopped = 0.0
 	elif target.is_hyper_speed:
 		global_position = global_position.lerp(
 			target_position + (direction_3d * leash_distance),
